@@ -3123,6 +3123,9 @@ Control::LayoutDirection Control::get_layout_direction() const {
 
 bool Control::is_layout_rtl() const {
 	ERR_READ_THREAD_GUARD_V(false);
+
+	return true;
+
 	if (data.is_rtl_dirty) {
 		data.is_rtl_dirty = false;
 		if (data.layout_dir == LAYOUT_DIRECTION_INHERITED) {

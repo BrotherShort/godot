@@ -2177,7 +2177,7 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 				}
 			}
 
-			if (!rtl && p_item->cells[i].buttons.size()) {
+			if (/*!rtl && */p_item->cells[i].buttons.size()) {
 				int buttons_width = 0;
 				for (int j = p_item->cells[i].buttons.size() - 1; j >= 0; j--) {
 					Ref<Texture2D> button_texture = p_item->cells[i].buttons[j].texture;
@@ -2185,6 +2185,13 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 				}
 
 				int total_ofs = ofs - theme_cache.offset.x;
+				/*int total_ofs;
+				if (!rtl) {
+					total_ofs = ofs - theme_cache.offset.x;
+				}
+				else {
+					total_ofs = ofs - (get_internal_min_size().width - theme_cache.offset.x);
+				}*/
 
 				// If part of the column is beyond the right side of the control due to scrolling, clamp the label width
 				// so that all buttons attached to the cell remain within view.
@@ -2228,6 +2235,7 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 				Rect2 r = cell_rect;
 				if (rtl) {
 					r.position.x = get_size().width - r.position.x - r.size.x;
+					//r.position.x = get_internal_min_size().width - r.position.x - theme_cache.offset.x * 2 - r.size.x;
 				}
 				RenderingServer::get_singleton()->canvas_item_add_line(ci, Point2i(r.position.x, r.position.y + r.size.height), r.position + r.size, theme_cache.guide_color, 1);
 			}
@@ -2238,6 +2246,7 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 					Rect2i row_rect = Rect2i(Point2i(content_rect.position.x, item_rect.position.y), Size2i(content_rect.size.x, item_rect.size.y));
 					if (rtl) {
 						row_rect.position.x = get_size().width - row_rect.position.x - row_rect.size.x;
+						//row_rect.position.x = get_internal_min_size().width + row_rect.position.x  - theme_cache.offset.x * 2 - row_rect.size.x;
 					}
 
 					if (p_item->cells[0].selected) {
@@ -2260,6 +2269,7 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 				Rect2i r = cell_rect;
 				if (rtl) {
 					r.position.x = get_size().width - r.position.x - r.size.x;
+					//r.position.x = get_internal_min_size().width - r.position.x - theme_cache.offset.x * 2 - r.size.x;
 				}
 
 				// Cell hover.
@@ -2279,6 +2289,7 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 					p_item->set_meta("__focus_rect", Rect2(r.position, r.size));
 					if (rtl) {
 						r.position.x = get_size().width - r.position.x - r.size.x;
+						//r.position.x = get_internal_min_size().width - r.position.x - theme_cache.offset.x * 2 - r.size.x;
 					}
 					if (p_item->cells[i].selected) {
 						if (has_focus()) {
@@ -2303,6 +2314,7 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 				}
 				if (rtl) {
 					r.position.x = get_size().width - r.position.x - r.size.x;
+					//r.position.x = get_internal_min_size().width - r.position.x - theme_cache.offset.x * 2 - r.size.x;
 				}
 				if (p_item->cells[i].custom_bg_outline) {
 					RenderingServer::get_singleton()->canvas_item_add_rect(ci, Rect2(r.position.x, r.position.y, r.size.x, 1), p_item->cells[i].bg_color);
@@ -2318,6 +2330,7 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 				Rect2 r = cell_rect;
 				if (rtl) {
 					r.position.x = get_size().width - r.position.x - r.size.x;
+					//r.position.x = get_internal_min_size().width - r.position.x - theme_cache.offset.x * 2 - r.size.x;
 				}
 				if (drop_mode_over == p_item) {
 					if (drop_mode_section == 0 || drop_mode_section == -1) {
@@ -2360,6 +2373,7 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 
 			if (rtl) {
 				item_rect.position.x = get_size().width - item_rect.position.x - item_rect.size.x;
+				//item_rect.position.x = get_internal_min_size().width - item_rect.position.x - theme_cache.offset.x * 2 - item_rect.size.x;
 			}
 
 			Point2i text_pos = item_rect.position;
@@ -2590,6 +2604,7 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 
 			if (rtl) {
 				apos.x = get_size().width - apos.x - arrow->get_width();
+				//apos.x = get_internal_min_size().width - apos.x - theme_cache.offset.x * 2 - arrow->get_width();
 			}
 
 			arrow->draw(ci, apos);
@@ -2640,7 +2655,9 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 				if (root_pos.y + line_width >= 0) {
 					if (rtl) {
 						root_pos.x = get_size().width - root_pos.x;
+						//root_pos.x = get_internal_min_size().width - root_pos.x - theme_cache.offset.x * 2;
 						parent_pos.x = get_size().width - parent_pos.x;
+						//parent_pos.x = get_internal_min_size().width - parent_pos.x - theme_cache.offset.x * 2;
 					}
 
 					// Order of parts on this bend: the horizontal line first, then the vertical line.
