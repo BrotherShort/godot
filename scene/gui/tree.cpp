@@ -2177,7 +2177,11 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 				}
 			}
 
+<<<<<<< HEAD
 			if (p_item->cells[i].buttons.size()) {
+=======
+			if (!p_item->cells[i].buttons.is_empty()) {
+>>>>>>> upstream/master
 				int buttons_width = 0;
 				for (int j = p_item->cells[i].buttons.size() - 1; j >= 0; j--) {
 					Ref<Texture2D> button_texture = p_item->cells[i].buttons[j].texture;
@@ -4560,7 +4564,7 @@ void Tree::item_edited(int p_column, TreeItem *p_item, MouseButton p_custom_mous
 
 void Tree::item_changed(int p_column, TreeItem *p_item) {
 	if (p_item != nullptr) {
-		if (p_column >= 0 && p_column < p_item->cells.size()) {
+		if (p_column >= 0 && p_column < p_item->cells.size()) {                           
 			p_item->cells.write[p_column].dirty = true;
 			columns.write[p_column].cached_minimum_width_dirty = true;
 		} else if (p_column == -1) {
