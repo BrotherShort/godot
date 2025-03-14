@@ -1938,7 +1938,7 @@ int Tree::get_item_height(TreeItem *p_item) const {
 	return height;
 }
 
-void Tree::draw_item_rect(TreeItem::Cell &p_cell, const Rect2i &p_rect, const Color &p_color, const Color &p_icon_color, int p_ol_size, const Color &p_ol_color) {
+Size2i Tree::draw_item_rect(TreeItem::Cell &p_cell, const Rect2i &p_rect, const Color &p_color, const Color &p_icon_color, int p_ol_size, const Color &p_ol_color) {
 	ERR_FAIL_COND(theme_cache.font.is_null());
 
 	Rect2i rect = p_rect.grow_individual(-theme_cache.inner_item_margin_left, -theme_cache.inner_item_margin_top, -theme_cache.inner_item_margin_right, -theme_cache.inner_item_margin_bottom);
@@ -1999,7 +1999,11 @@ void Tree::draw_item_rect(TreeItem::Cell &p_cell, const Rect2i &p_rect, const Co
 			p_cell.text_buf->draw_outline(ci, draw_pos, p_ol_size, p_ol_color);
 		}
 		p_cell.text_buf->draw(ci, draw_pos, p_color);
+		rect.position.x += ts.width + theme_cache.h_separation;
+		rect.size.x -= ts.width + theme_cache.h_separation;
 	}
+
+	return rect.size;
 }
 
 void Tree::update_column(int p_col) {
@@ -2203,10 +2207,36 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 					total_ofs = ofs - (get_internal_min_size().width - theme_cache.offset.x);
 				}*/
 
+				Ref<TextParagraph> text_patagraph;
+				text_patagraph.instantiate();
+				text_patagraph->set_text_overrun_behavior(TextServer::OVERRUN_TRIM_ELLIPSIS);
+
+				Ref<Font> font;
+				if (p_item->cells[i].custom_font.is_valid()) {
+					font = p_item->cells[i].custom_font;
+				} else {
+					font = theme_cache.font;
+				}
+
+				int font_size;
+				if (p_item->cells[i].custom_font_size > 0) {
+					font_size = p_item->cells[i].custom_font_size;
+				} else {
+					font_size = theme_cache.font_size;
+				}
+				text_patagraph->add_string("...", font, font_size, p_item->cells[i].language);
+				float min_text_width = text_patagraph->get_size().x;
+
+				float min_item_width =
+					_get_cell_icon_size(p_item->cells[i]).x +
+					theme_cache.h_separation +
+					min_text_width +
+					buttons_width;
+
 				// If part of the column is beyond the right side of the control due to scrolling, clamp the label width
 				// so that all buttons attached to the cell remain within view.
 				if (total_ofs + item_width > p_draw_size.width) {
-					item_width = MAX(buttons_width, p_draw_size.width - total_ofs);
+					item_width = MAX(min_item_width, p_draw_size.width - total_ofs);
 				}
 			}
 
@@ -2389,9 +2419,11 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 			Point2i text_pos = item_rect.position;
 			text_pos.y += Math::floor(p_draw_ofs.y) - _get_title_button_height();
 
+			int draw_item_width = 0;
 			switch (p_item->cells[i].mode) {
 				case TreeItem::CELL_MODE_STRING: {
-					draw_item_rect(p_item->cells.write[i], item_rect, cell_color, icon_col, outline_size, font_outline_color);
+					Size2i draw_item_rect_size = draw_item_rect(p_item->cells.write[i], item_rect, cell_color, icon_col, outline_size, font_outline_color);
+					draw_item_width = draw_item_rect_size.x;
 				} break;
 				case TreeItem::CELL_MODE_CHECK: {
 					Point2i check_ofs = item_rect.position;
@@ -2568,6 +2600,8 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 
 				button_ofs.y += (label_h - button_size.height) / 2;
 				button_ofs += theme_cache.button_pressed->get_offset();
+
+
 
 				if (rtl) {
 					button_ofs.x = get_size().width - button_ofs.x - button_texture->get_width();
