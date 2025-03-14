@@ -2133,21 +2133,21 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 
 	/* Draw label, if height fits */
 
-	bool skip = (p_item == root && hide_root);
+	bool skip_root = (p_item == root && hide_root);
 
-	if (!skip) {
+	if (!skip_root) {
 		// Draw separation.
 
 		ERR_FAIL_COND_V(theme_cache.font.is_null(), -1);
 
 		int ofs = p_pos.x + ((p_item->disable_folding || hide_folding) ? theme_cache.h_separation : theme_cache.item_margin);
-		int skip2 = 0;
+		int skip_col = 0;
 
 		bool is_row_hovered = (!cache.hover_header_row && cache.hover_item == p_item);
 
 		for (int i = 0; i < columns.size(); i++) {
-			if (skip2) {
-				skip2--;
+			if (skip_col) {
+				skip_col--;
 				continue;
 			}
 
@@ -2157,11 +2157,21 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 			int item_width = get_column_width(i);
 
 			if (i == 0) {
-				item_width -= ofs;
+				if (item_width >= ofs) {
+					item_width -= ofs;
+				} else {
+					float relationship_width = 0;
+					if (!(p_item->disable_folding || hide_folding)) {
+						relationship_width = theme_cache.item_margin + theme_cache.arrow->get_width() / 2 + 1;
+						//Math::floor(theme_cache.parent_hl_line_width * Math::round(theme_cache.base_scale) / 2);
+					}
+					if (item_width /*+ theme_cache.panel_style->get_margin(SIDE_RIGHT)*/ <= ofs - relationship_width) {
+						// No space to display the item, the arrow and relationship lines.
+						ofs = get_column_width(0);
+						continue;
+					}
 
-				if (item_width <= 0) {
-					ofs = get_column_width(0);
-					continue;
+					item_width -= ofs; //item_width = 0;
 				}
 			} else {
 				ofs += theme_cache.h_separation;
@@ -2173,7 +2183,7 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 				while (i + plus < columns.size() && !p_item->cells[i + plus].editable && p_item->cells[i + plus].mode == TreeItem::CELL_MODE_STRING && p_item->cells[i + plus].xl_text.is_empty() && p_item->cells[i + plus].icon.is_null()) {
 					item_width += get_column_width(i + plus);
 					plus++;
-					skip2++;
+					skip_col++;
 				}
 			}
 
@@ -2612,13 +2622,13 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 	}
 
 	Point2 children_pos = p_pos;
-
-	if (!skip) {
+	
+	if (!skip_root) {
 		children_pos.x += theme_cache.item_margin;
 		htotal += label_h;
 		children_pos.y += htotal;
 	}
-
+	
 	if (!p_item->collapsed) { /* if not collapsed, check the children */
 		TreeItem *c = p_item->first_child;
 
@@ -2639,7 +2649,7 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 				int root_ofs = children_pos.x + ((p_item->disable_folding || hide_folding) ? theme_cache.h_separation : theme_cache.item_margin);
 				int parent_ofs = p_pos.x + theme_cache.item_margin;
 				Point2i root_pos = Point2i(root_ofs, children_pos.y + child_self_height / 2) - theme_cache.offset + p_draw_ofs;
-
+				
 				if (c->get_visible_child_count() > 0) {
 					root_pos -= Point2i(theme_cache.arrow->get_width(), 0);
 				}
@@ -2649,7 +2659,7 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 				float children_line_width = theme_cache.children_hl_line_width * Math::round(theme_cache.base_scale);
 
 				Point2i parent_pos = Point2i(parent_ofs - theme_cache.arrow->get_width() / 2, p_pos.y + label_h / 2 + theme_cache.arrow->get_height() / 2) - theme_cache.offset + p_draw_ofs;
-
+				
 				int more_prev_ofs = 0;
 
 				if (root_pos.y + line_width >= 0) {
