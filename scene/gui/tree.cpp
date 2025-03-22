@@ -2157,11 +2157,22 @@ int Tree::draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 
 			int item_width = get_column_width(i);
 
 			if (i == 0) {
-				item_width -= ofs;
+				if (item_width >= ofs) {
+					item_width -= ofs;
+				} else {
+					float relationship_width = 0;
+					if (!(p_item->disable_folding || hide_folding)) {
+						relationship_width = theme_cache.item_margin + theme_cache.arrow->get_width() / 2 + 1;
+						//Math::floor(theme_cache.parent_hl_line_width * Math::round(theme_cache.base_scale) / 2);
+					}
+					if (item_width + theme_cache.panel_style->get_margin(SIDE_RIGHT) <= ofs - relationship_width) {
+						// No space to display the item, the arrow and relationship lines.
+						ofs = get_column_width(0);
+						continue;
+					}
 
-				if (item_width <= 0) {
-					ofs = get_column_width(0);
-					continue;
+					item_width = 0;
+					//item_width -= ofs; 
 				}
 			} else {
 				ofs += theme_cache.h_separation;
