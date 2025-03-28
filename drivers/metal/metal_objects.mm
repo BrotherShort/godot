@@ -1063,7 +1063,7 @@ void MDUniformSet::bind_uniforms_argument_buffers(MDShader *p_shader, MDCommandB
 	id<MTLRenderCommandEncoder> __unsafe_unretained enc = p_state.encoder;
 	id<MTLDevice> __unsafe_unretained device = enc.device;
 
-	BoundUniformSet &bus = bound_uniform_set(p_shader, device, p_state.resource_usage);
+	BoundUniformSet &bus = bound_uniform_set(p_shader, device, p_state.resource_usage, p_set_index);
 
 	// Set the buffer for the vertex stage.
 	{
@@ -1091,13 +1091,13 @@ void MDUniformSet::bind_uniforms_direct(MDShader *p_shader, MDCommandBuffer::Ren
 
 	for (uint32_t i = 0; i < MIN(uniforms.size(), set.uniforms.size()); i++) {
 		RDD::BoundUniform const &uniform = uniforms[i];
-		UniformInfo ui = set.uniforms[i];
+		const UniformInfo &ui = set.uniforms[i];
 
 		static const RDC::ShaderStage stage_usages[2] = { RDC::ShaderStage::SHADER_STAGE_VERTEX, RDC::ShaderStage::SHADER_STAGE_FRAGMENT };
 		for (const RDC::ShaderStage stage : stage_usages) {
 			ShaderStageUsage const stage_usage = ShaderStageUsage(1 << stage);
 
-			BindingInfo *bi = ui.bindings.getptr(stage);
+			const BindingInfo *bi = ui.bindings.getptr(stage);
 			if (bi == nullptr) {
 				// No binding for this stage.
 				continue;
@@ -1131,7 +1131,7 @@ void MDUniformSet::bind_uniforms_direct(MDShader *p_shader, MDCommandBuffer::Ren
 						samplers[j] = sampler;
 						textures[j] = texture;
 					}
-					BindingInfo *sbi = ui.bindings_secondary.getptr(stage);
+					const BindingInfo *sbi = ui.bindings_secondary.getptr(stage);
 					if (sbi) {
 						if (stage == RDD::SHADER_STAGE_VERTEX) {
 							[enc setVertexSamplerStates:samplers withRange:NSMakeRange(sbi->index, count)];
@@ -1177,7 +1177,7 @@ void MDUniformSet::bind_uniforms_direct(MDShader *p_shader, MDCommandBuffer::Ren
 							[enc setFragmentTexture:obj atIndex:bi->index];
 						}
 
-						BindingInfo *sbi = ui.bindings_secondary.getptr(stage);
+						const BindingInfo *sbi = ui.bindings_secondary.getptr(stage);
 						if (sbi) {
 							id<MTLTexture> tex = obj.parentTexture ? obj.parentTexture : obj;
 							id<MTLBuffer> buf = tex.buffer;
@@ -1275,7 +1275,7 @@ void MDUniformSet::bind_uniforms_argument_buffers(MDShader *p_shader, MDCommandB
 	id<MTLComputeCommandEncoder> enc = p_state.encoder;
 	id<MTLDevice> device = enc.device;
 
-	BoundUniformSet &bus = bound_uniform_set(p_shader, device, p_state.resource_usage);
+	BoundUniformSet &bus = bound_uniform_set(p_shader, device, p_state.resource_usage, p_set_index);
 
 	uint32_t const *offset = set_info.offsets.getptr(RDD::SHADER_STAGE_COMPUTE);
 	if (offset) {
@@ -1293,12 +1293,12 @@ void MDUniformSet::bind_uniforms_direct(MDShader *p_shader, MDCommandBuffer::Com
 
 	for (uint32_t i = 0; i < uniforms.size(); i++) {
 		RDD::BoundUniform const &uniform = uniforms[i];
-		UniformInfo ui = set.uniforms[i];
+		const UniformInfo &ui = set.uniforms[i];
 
 		const RDC::ShaderStage stage = RDC::ShaderStage::SHADER_STAGE_COMPUTE;
 		const ShaderStageUsage stage_usage = ShaderStageUsage(1 << stage);
 
-		BindingInfo *bi = ui.bindings.getptr(stage);
+		const BindingInfo *bi = ui.bindings.getptr(stage);
 		if (bi == nullptr) {
 			// No binding for this stage.
 			continue;
@@ -1328,7 +1328,7 @@ void MDUniformSet::bind_uniforms_direct(MDShader *p_shader, MDCommandBuffer::Com
 					samplers[j] = sampler;
 					textures[j] = texture;
 				}
-				BindingInfo *sbi = ui.bindings_secondary.getptr(stage);
+				const BindingInfo *sbi = ui.bindings_secondary.getptr(stage);
 				if (sbi) {
 					[enc setSamplerStates:samplers withRange:NSMakeRange(sbi->index, count)];
 				}
@@ -1354,7 +1354,7 @@ void MDUniformSet::bind_uniforms_direct(MDShader *p_shader, MDCommandBuffer::Com
 					id<MTLTexture> obj = rid::get(uniform.ids[0]);
 					[enc setTexture:obj atIndex:bi->index];
 
-					BindingInfo *sbi = ui.bindings_secondary.getptr(stage);
+					const BindingInfo *sbi = ui.bindings_secondary.getptr(stage);
 					if (sbi) {
 						id<MTLTexture> tex = obj.parentTexture ? obj.parentTexture : obj;
 						id<MTLBuffer> buf = tex.buffer;
@@ -1417,14 +1417,14 @@ void MDUniformSet::bind_uniforms(MDShader *p_shader, MDCommandBuffer::ComputeSta
 	}
 }
 
-BoundUniformSet &MDUniformSet::bound_uniform_set(MDShader *p_shader, id<MTLDevice> p_device, ResourceUsageMap &p_resource_usage) {
+BoundUniformSet &MDUniformSet::bound_uniform_set(MDShader *p_shader, id<MTLDevice> p_device, ResourceUsageMap &p_resource_usage, uint32_t p_set_index) {
 	BoundUniformSet *sus = bound_uniforms.getptr(p_shader);
 	if (sus != nullptr) {
 		sus->merge_into(p_resource_usage);
 		return *sus;
 	}
 
-	UniformSet const &set = p_shader->sets[index];
+	UniformSet const &set = p_shader->sets[p_set_index];
 
 	HashMap<id<MTLResource>, StageResourceUsage> bound_resources;
 	auto add_usage = [&bound_resources](id<MTLResource> __unsafe_unretained res, RDD::ShaderStage stage, MTLResourceUsage usage) {
