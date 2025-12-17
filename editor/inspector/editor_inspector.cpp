@@ -2816,7 +2816,16 @@ void EditorInspectorArray::_move_element(int p_element_index, int p_to_pos) {
 
 			if (p_element_index < 0) {
 				// Add an element.
-				properties_as_array.insert(p_to_pos < 0 ? properties_as_array.size() : p_to_pos, Dictionary());
+				Dictionary default_element;
+				if (properties_as_array.size() > 0) {
+					default_element = properties_as_array[0].duplicate();
+				}
+				for (const KeyValue<Variant, Variant> &kv : default_element) {
+					Variant v = kv.value;
+					v.zero();
+					default_element[kv.key] = v;
+				}
+				properties_as_array.insert(p_to_pos < 0 ? properties_as_array.size() : p_to_pos, default_element);
 			} else if (p_to_pos < 0) {
 				// Delete the element.
 				properties_as_array.remove_at(p_element_index);
