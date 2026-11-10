@@ -1010,6 +1010,8 @@ void TextEdit::_notification(int p_what) {
 				draw_caret = false;
 			}
 
+			//Size2 content_size = _get_content_rect().get_size();
+
 			_update_scrollbars();
 
 			RS::get_singleton()->canvas_item_clear(text_ci);
@@ -1017,6 +1019,10 @@ void TextEdit::_notification(int p_what) {
 			RS::get_singleton()->canvas_item_set_clip(text_ci, true);
 			RS::get_singleton()->canvas_item_set_visibility_layer(text_ci, get_visibility_layer());
 			RS::get_singleton()->canvas_item_set_default_texture_filter(text_ci, RSE::CanvasItemTextureFilter(get_texture_filter_in_tree()));
+
+			RS::get_singleton()->canvas_item_clear(content_ci);
+			RS::get_singleton()->canvas_item_set_custom_rect(content_ci, !is_visibility_clip_disabled(), _get_content_rect());
+			RS::get_singleton()->canvas_item_set_clip(content_ci, true);
 
 			int left_margin = Math::ceil(style->get_margin(SIDE_LEFT));
 			int xmargin_beg = left_margin + gutters_width + gutter_padding;
@@ -1812,12 +1818,12 @@ void TextEdit::_notification(int p_what) {
 
 						bool had_glyphs_drawn = false;
 						for (int k = 0; k < glyphs[j].repeat; k++) {
-							if (!clipped && (char_ofs + char_margin) >= xmargin_beg && (char_ofs + glyphs[j].advance + char_margin) <= xmargin_end) {
+							if (!clipped && (char_ofs + char_margin + glyphs[j].advance) >= xmargin_beg && (char_ofs + char_margin) <= xmargin_end) {
 								if (glyphs[j].font_rid != RID()) {
-									TS->font_draw_glyph(glyphs[j].font_rid, text_ci, glyphs[j].font_size, Vector2(char_margin + char_ofs + glyphs[j].x_off, ofs_y + glyphs[j].y_off), glyphs[j].index, gl_color);
+									TS->font_draw_glyph(glyphs[j].font_rid, content_ci, glyphs[j].font_size, Vector2(char_margin + char_ofs + glyphs[j].x_off, ofs_y + glyphs[j].y_off), glyphs[j].index, gl_color);
 									had_glyphs_drawn = true;
 								} else if (((glyphs[j].flags & TextServer::GRAPHEME_IS_VIRTUAL) != TextServer::GRAPHEME_IS_VIRTUAL) && ((glyphs[j].flags & TextServer::GRAPHEME_IS_EMBEDDED_OBJECT) != TextServer::GRAPHEME_IS_EMBEDDED_OBJECT)) {
-									TS->draw_hex_code_box(text_ci, glyphs[j].font_size, Vector2(char_margin + char_ofs + glyphs[j].x_off, ofs_y + glyphs[j].y_off), glyphs[j].index, gl_color);
+									TS->draw_hex_code_box(content_ci, glyphs[j].font_size, Vector2(char_margin + char_ofs + glyphs[j].x_off, ofs_y + glyphs[j].y_off), glyphs[j].index, gl_color);
 									had_glyphs_drawn = true;
 								}
 							}
@@ -1979,20 +1985,20 @@ void TextEdit::_notification(int p_what) {
 												}
 												ts_caret.t_caret.position += Vector2(char_margin, ofs_y);
 												if (overtype_mode) {
-													RS::get_singleton()->canvas_item_add_rect(text_ci, ts_caret.t_caret, theme_cache.caret_color);
+													RS::get_singleton()->canvas_item_add_rect(content_ci, ts_caret.t_caret, theme_cache.caret_color);
 												} else {
-													_draw_rect_unfilled(text_ci, ts_caret.t_caret, theme_cache.caret_color);
+													_draw_rect_unfilled(content_ci, ts_caret.t_caret, theme_cache.caret_color);
 												}
 
 												if (ts_caret.l_caret != Rect2() && ts_caret.l_dir != ts_caret.t_dir) {
 													// Draw split caret (leading part).
 													ts_caret.l_caret.position += Vector2(char_margin, ofs_y);
 													ts_caret.l_caret.size.x = caret_width;
-													RS::get_singleton()->canvas_item_add_rect(text_ci, ts_caret.l_caret, theme_cache.caret_color);
+													RS::get_singleton()->canvas_item_add_rect(content_ci, ts_caret.l_caret, theme_cache.caret_color);
 													// Draw extra direction marker on top of split caret.
 													float d = (ts_caret.l_dir == TextServer::DIRECTION_LTR) ? 0.5 : -3;
 													Rect2 trect = Rect2(ts_caret.l_caret.position.x + d * caret_width, ts_caret.l_caret.position.y + ts_caret.l_caret.size.y - caret_width, 3 * caret_width, caret_width);
-													RS::get_singleton()->canvas_item_add_rect(text_ci, trect, theme_cache.caret_color);
+													RS::get_singleton()->canvas_item_add_rect(content_ci, trect, theme_cache.caret_color);
 												}
 											} else { // End of the line.
 												if (gl_size > 0) {
@@ -2018,9 +2024,9 @@ void TextEdit::_notification(int p_what) {
 													ts_caret.l_caret.position.x -= ts_caret.l_caret.size.x;
 												}
 												if (overtype_mode) {
-													RS::get_singleton()->canvas_item_add_rect(text_ci, ts_caret.l_caret, theme_cache.caret_color);
+													RS::get_singleton()->canvas_item_add_rect(content_ci, ts_caret.l_caret, theme_cache.caret_color);
 												} else {
-													_draw_rect_unfilled(text_ci, ts_caret.l_caret, theme_cache.caret_color);
+													_draw_rect_unfilled(content_ci, ts_caret.l_caret, theme_cache.caret_color);
 												}
 											}
 										} else {
@@ -2029,28 +2035,28 @@ void TextEdit::_notification(int p_what) {
 												// Draw extra marker on top of mid caret.
 												Rect2 trect = Rect2(ts_caret.l_caret.position.x - 2.5 * caret_width, ts_caret.l_caret.position.y, 6 * caret_width, caret_width);
 												trect.position += Vector2(char_margin, ofs_y);
-												RS::get_singleton()->canvas_item_add_rect(text_ci, trect, theme_cache.caret_color);
+												RS::get_singleton()->canvas_item_add_rect(content_ci, trect, theme_cache.caret_color);
 											} else if (ts_caret.l_caret != Rect2() && ts_caret.t_caret != Rect2() && ts_caret.l_dir != ts_caret.t_dir) {
 												// Draw extra direction marker on top of split caret.
 												float d = (ts_caret.l_dir == TextServer::DIRECTION_LTR) ? 0.5 : -3;
 												Rect2 trect = Rect2(ts_caret.l_caret.position.x + d * caret_width, ts_caret.l_caret.position.y + ts_caret.l_caret.size.y - caret_width, 3 * caret_width, caret_width);
 												trect.position += Vector2(char_margin, ofs_y);
-												RS::get_singleton()->canvas_item_add_rect(text_ci, trect, theme_cache.caret_color);
+												RS::get_singleton()->canvas_item_add_rect(content_ci, trect, theme_cache.caret_color);
 
 												d = (ts_caret.t_dir == TextServer::DIRECTION_LTR) ? 0.5 : -3;
 												trect = Rect2(ts_caret.t_caret.position.x + d * caret_width, ts_caret.t_caret.position.y, 3 * caret_width, caret_width);
 												trect.position += Vector2(char_margin, ofs_y);
-												RS::get_singleton()->canvas_item_add_rect(text_ci, trect, theme_cache.caret_color);
+												RS::get_singleton()->canvas_item_add_rect(content_ci, trect, theme_cache.caret_color);
 											}
 											ts_caret.l_caret.position += Vector2(char_margin, ofs_y);
 											ts_caret.l_caret.size.x = caret_width;
 
-											RS::get_singleton()->canvas_item_add_rect(text_ci, ts_caret.l_caret, theme_cache.caret_color);
+											RS::get_singleton()->canvas_item_add_rect(content_ci, ts_caret.l_caret, theme_cache.caret_color);
 
 											ts_caret.t_caret.position += Vector2(char_margin, ofs_y);
 											ts_caret.t_caret.size.x = caret_width;
 
-											RS::get_singleton()->canvas_item_add_rect(text_ci, ts_caret.t_caret, theme_cache.caret_color);
+											RS::get_singleton()->canvas_item_add_rect(content_ci, ts_caret.t_caret, theme_cache.caret_color);
 										}
 									}
 								}
@@ -2466,6 +2472,20 @@ bool TextEdit::alt_input(const Ref<InputEvent> &p_gui_input) {
 		}
 	}
 	return false;
+}
+
+Rect2 TextEdit::_get_content_rect() const {
+	const Size2 control_size = get_size();
+	const Ref<StyleBox> sb = _get_current_stylebox();
+
+	const real_t width = control_size.x - sb->get_margin(SIDE_LEFT) - sb->get_margin(SIDE_RIGHT);
+	const real_t height = control_size.y - sb->get_margin(SIDE_TOP) - sb->get_margin(SIDE_BOTTOM);
+	const Rect2 content_rect = Rect2(sb->get_offset(), Size2(width, height));
+
+	const real_t v_size = MAX(v_scroll->is_visible() ? v_scroll->get_bound_minimum_size().x : 0, draw_minimap ? minimap_width : 0);
+	const real_t h_size = h_scroll->is_visible() ? h_scroll->get_bound_minimum_size().y : 0;
+
+	return content_rect.grow_individual(0, 0, -v_size, -h_size);
 }
 
 void TextEdit::gui_input(const Ref<InputEvent> &p_gui_input) {
@@ -9423,11 +9443,11 @@ void TextEdit::_update_scrollbars() {
 	Size2 vmin = v_scroll->get_bound_minimum_size();
 
 	Ref<StyleBox> style = _get_current_stylebox();
-	v_scroll->set_begin(Point2(size.width - vmin.width, style->get_margin(SIDE_TOP)));
-	v_scroll->set_end(Point2(size.width, size.height - style->get_margin(SIDE_TOP) - style->get_margin(SIDE_BOTTOM)));
+	v_scroll->set_begin(Point2(size.width - style->get_margin(SIDE_RIGHT) - vmin.width, style->get_margin(SIDE_TOP)));
+	v_scroll->set_end(Point2(size.width - style->get_margin(SIDE_RIGHT), size.height - style->get_margin(SIDE_BOTTOM) - (h_scroll->is_visible() ? hmin.height : 0)));
 
-	h_scroll->set_begin(Point2(0, size.height - hmin.height));
-	h_scroll->set_end(Point2(size.width - vmin.width, size.height));
+	h_scroll->set_begin(Point2(style->get_margin(SIDE_LEFT), size.height - style->get_margin(SIDE_BOTTOM) - hmin.height));
+	h_scroll->set_end(Point2(size.width - style->get_margin(SIDE_RIGHT) - (v_scroll->is_visible() ? vmin.width : 0), size.height - style->get_margin(SIDE_BOTTOM)));
 
 	bool draw_placeholder = _using_placeholder();
 
@@ -10119,6 +10139,10 @@ TextEdit::TextEdit(const String &p_placeholder) {
 	text_ci = RS::get_singleton()->canvas_item_create();
 	RS::get_singleton()->canvas_item_set_parent(text_ci, get_canvas_item());
 	RS::get_singleton()->canvas_item_set_use_parent_material(text_ci, true);
+
+	content_ci = RS::get_singleton()->canvas_item_create();
+	RS::get_singleton()->canvas_item_set_parent(content_ci, get_canvas_item());
+	RS::get_singleton()->canvas_item_set_use_parent_material(content_ci, true);
 
 	h_scroll = memnew(HScrollBar);
 	v_scroll = memnew(VScrollBar);

@@ -288,6 +288,7 @@ private:
 	/* Text */
 	Text text;
 	RID text_ci;
+	RID content_ci;
 	bool setting_text = false;
 
 	enum AltInputMode {
@@ -1273,6 +1274,8 @@ public:
 	bool is_custom_word_separators_enabled() const;
 
 	String get_custom_word_separators() const;
+
+	Rect2 _get_content_rect() const; // Considering the background stylebox and scrollbars.
 
 	/* Deprecated. */
 #ifndef DISABLE_DEPRECATED
