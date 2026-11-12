@@ -1024,6 +1024,10 @@ void TextEdit::_notification(int p_what) {
 			RS::get_singleton()->canvas_item_set_custom_rect(content_ci, !is_visibility_clip_disabled(), _get_content_rect());
 			RS::get_singleton()->canvas_item_set_clip(content_ci, true);
 
+			RS::get_singleton()->canvas_item_clear(main_text_ci);
+			RS::get_singleton()->canvas_item_set_custom_rect(main_text_ci, !is_visibility_clip_disabled(), _get_main_text_rect());
+			RS::get_singleton()->canvas_item_set_clip(main_text_ci, true);
+
 			int left_margin = Math::ceil(style->get_margin(SIDE_LEFT));
 			int xmargin_beg = left_margin + gutters_width + gutter_padding;
 
@@ -1249,9 +1253,9 @@ void TextEdit::_notification(int p_what) {
 				}
 
 				if (rtl) {
-					RS::get_singleton()->canvas_item_add_rect(text_ci, Rect2(size.width - (xmargin_end + 2) - minimap_width, viewport_offset_y + ofs_y, minimap_width, viewport_height), viewport_color);
+					RS::get_singleton()->canvas_item_add_rect(content_ci, Rect2(size.width - (xmargin_end + 2) - minimap_width, viewport_offset_y + ofs_y, minimap_width, viewport_height), viewport_color);
 				} else {
-					RS::get_singleton()->canvas_item_add_rect(text_ci, Rect2((xmargin_end + 2), viewport_offset_y + ofs_y, minimap_width, viewport_height), viewport_color);
+					RS::get_singleton()->canvas_item_add_rect(content_ci, Rect2((xmargin_end + 2), viewport_offset_y + ofs_y, minimap_width, viewport_height), viewport_color);
 				}
 
 				for (int i = 0; i < minimap_draw_amount; i++) {
@@ -1314,15 +1318,15 @@ void TextEdit::_notification(int p_what) {
 
 						if (highlight_current_line && highlighted_lines.has(Pair<int, int>(minimap_line, line_wrap_index))) {
 							if (rtl) {
-								RS::get_singleton()->canvas_item_add_rect(text_ci, Rect2(size.width - (xmargin_end + 2) - minimap_width, i * minimap_line_height + ofs_y, minimap_width, 2), theme_cache.current_line_color);
+								RS::get_singleton()->canvas_item_add_rect(content_ci, Rect2(size.width - (xmargin_end + 2) - minimap_width, i * minimap_line_height + ofs_y, minimap_width, 2), theme_cache.current_line_color);
 							} else {
-								RS::get_singleton()->canvas_item_add_rect(text_ci, Rect2((xmargin_end + 2), i * minimap_line_height + ofs_y, minimap_width, 2), theme_cache.current_line_color);
+								RS::get_singleton()->canvas_item_add_rect(content_ci, Rect2((xmargin_end + 2), i * minimap_line_height + ofs_y, minimap_width, 2), theme_cache.current_line_color);
 							}
 						} else if (line_background_color.a > 0) {
 							if (rtl) {
-								RS::get_singleton()->canvas_item_add_rect(text_ci, Rect2(size.width - (xmargin_end + 2) - minimap_width, i * minimap_line_height + ofs_y, minimap_width, 2), line_background_color);
+								RS::get_singleton()->canvas_item_add_rect(content_ci, Rect2(size.width - (xmargin_end + 2) - minimap_width, i * minimap_line_height + ofs_y, minimap_width, 2), line_background_color);
 							} else {
-								RS::get_singleton()->canvas_item_add_rect(text_ci, Rect2((xmargin_end + 2), i * minimap_line_height + ofs_y, minimap_width, 2), line_background_color);
+								RS::get_singleton()->canvas_item_add_rect(content_ci, Rect2((xmargin_end + 2), i * minimap_line_height + ofs_y, minimap_width, 2), line_background_color);
 							}
 						}
 
@@ -1374,9 +1378,9 @@ void TextEdit::_notification(int p_what) {
 
 							if (characters > 0) {
 								if (rtl) {
-									RS::get_singleton()->canvas_item_add_rect(text_ci, Rect2(Point2(size.width - xpos - minimap_char_size.x * characters, minimap_line_height * i + ofs_y), Point2(minimap_char_size.x * characters, minimap_char_size.y)), current_color);
+									RS::get_singleton()->canvas_item_add_rect(content_ci, Rect2(Point2(size.width - xpos - minimap_char_size.x * characters, minimap_line_height * i + ofs_y), Point2(minimap_char_size.x * characters, minimap_char_size.y)), current_color);
 								} else {
-									RS::get_singleton()->canvas_item_add_rect(text_ci, Rect2(Point2(xpos, minimap_line_height * i + ofs_y), Point2(minimap_char_size.x * characters, minimap_char_size.y)), current_color);
+									RS::get_singleton()->canvas_item_add_rect(content_ci, Rect2(Point2(xpos, minimap_line_height * i + ofs_y), Point2(minimap_char_size.x * characters, minimap_char_size.y)), current_color);
 								}
 							}
 
@@ -1486,9 +1490,9 @@ void TextEdit::_notification(int p_what) {
 
 					if (text.get_line_background_color(line).a > 0.0) {
 						if (rtl) {
-							RS::get_singleton()->canvas_item_add_rect(text_ci, Rect2(size.width - xmargin_end, ofs_y, xmargin_end - xmargin_beg, row_height), text.get_line_background_color(line));
+							RS::get_singleton()->canvas_item_add_rect(main_text_ci, Rect2(size.width - xmargin_end, ofs_y, xmargin_end - xmargin_beg, row_height), text.get_line_background_color(line));
 						} else {
-							RS::get_singleton()->canvas_item_add_rect(text_ci, Rect2(xmargin_beg, ofs_y, xmargin_end - xmargin_beg, row_height), text.get_line_background_color(line));
+							RS::get_singleton()->canvas_item_add_rect(main_text_ci, Rect2(xmargin_beg, ofs_y, xmargin_end - xmargin_beg, row_height), text.get_line_background_color(line));
 						}
 					}
 
@@ -1638,7 +1642,7 @@ void TextEdit::_notification(int p_what) {
 								if (rect.position.x + rect.size.x > xmargin_end) {
 									rect.size.x = xmargin_end - rect.position.x;
 								}
-								RS::get_singleton()->canvas_item_add_rect(text_ci, rect, theme_cache.selection_color);
+								RS::get_singleton()->canvas_item_add_rect(main_text_ci, rect, theme_cache.selection_color);
 							}
 						}
 					}
@@ -1660,8 +1664,8 @@ void TextEdit::_notification(int p_what) {
 								} else if (rect.position.x + rect.size.x > xmargin_end) {
 									rect.size.x = xmargin_end - rect.position.x;
 								}
-								RS::get_singleton()->canvas_item_add_rect(text_ci, rect, theme_cache.search_result_color);
-								_draw_rect_unfilled(text_ci, rect, theme_cache.search_result_border_color);
+								RS::get_singleton()->canvas_item_add_rect(main_text_ci, rect, theme_cache.search_result_color);
+								_draw_rect_unfilled(main_text_ci, rect, theme_cache.search_result_border_color);
 							}
 
 							search_text_col = _get_column_pos_of_word(search_text, str, search_flags, search_text_col + search_text_len);
@@ -1684,7 +1688,7 @@ void TextEdit::_notification(int p_what) {
 								} else if (rect.position.x + rect.size.x > xmargin_end) {
 									rect.size.x = xmargin_end - rect.position.x;
 								}
-								RS::get_singleton()->canvas_item_add_rect(text_ci, rect, theme_cache.word_highlighted_color);
+								RS::get_singleton()->canvas_item_add_rect(main_text_ci, rect, theme_cache.word_highlighted_color);
 							}
 
 							highlighted_text_col = _get_column_pos_of_word(highlighted_text, str, SEARCH_MATCH_CASE | SEARCH_WHOLE_WORDS, highlighted_text_col + highlighted_text_len);
@@ -1711,7 +1715,7 @@ void TextEdit::_notification(int p_what) {
 									}
 									rect.position.y += std::ceil(TS->shaped_text_get_ascent(rid)) + std::ceil(theme_cache.font->get_underline_position(theme_cache.font_size));
 									rect.size.y = MAX(1, theme_cache.font->get_underline_thickness(theme_cache.font_size));
-									RS::get_singleton()->canvas_item_add_rect(text_ci, rect, highlight_underline_color);
+									RS::get_singleton()->canvas_item_add_rect(main_text_ci, rect, highlight_underline_color);
 								}
 
 								lookup_symbol_word_col = _get_column_pos_of_word(lookup_symbol_word, str, SEARCH_MATCH_CASE | SEARCH_WHOLE_WORDS, lookup_symbol_word_col + lookup_symbol_word_len);
@@ -1735,7 +1739,7 @@ void TextEdit::_notification(int p_what) {
 							for (int k = 0; k < glyphs[j].repeat; k++) {
 								if ((char_ofs + char_margin) >= xmargin_beg && (char_ofs + glyphs[j].advance + char_margin) <= xmargin_end) {
 									if (glyphs[j].font_rid != RID()) {
-										TS->font_draw_glyph_outline(glyphs[j].font_rid, text_ci, glyphs[j].font_size, theme_cache.outline_size, Vector2(char_margin + char_ofs + glyphs[j].x_off, ofs_y + glyphs[j].y_off), glyphs[j].index, theme_cache.outline_color);
+										TS->font_draw_glyph_outline(glyphs[j].font_rid, main_text_ci, glyphs[j].font_size, theme_cache.outline_size, Vector2(char_margin + char_ofs + glyphs[j].x_off, ofs_y + glyphs[j].y_off), glyphs[j].index, theme_cache.outline_color);
 									}
 								}
 								char_ofs += glyphs[j].advance;
@@ -1793,7 +1797,7 @@ void TextEdit::_notification(int p_what) {
 											gl_color = _get_brace_mismatch_color();
 										}
 										Rect2 rect = Rect2(char_pos, ofs_y + theme_cache.font->get_underline_position(theme_cache.font_size), glyphs[j].advance * glyphs[j].repeat, MAX(theme_cache.font->get_underline_thickness(theme_cache.font_size) * theme_cache.base_scale, 1));
-										RS::get_singleton()->canvas_item_add_rect(text_ci, rect, gl_color);
+										RS::get_singleton()->canvas_item_add_rect(main_text_ci, rect, gl_color);
 									}
 
 									if ((brace_match.close_match_line == line && brace_match.close_match_column == glyphs[j].start) ||
@@ -1802,18 +1806,18 @@ void TextEdit::_notification(int p_what) {
 											gl_color = _get_brace_mismatch_color();
 										}
 										Rect2 rect = Rect2(char_pos, ofs_y + theme_cache.font->get_underline_position(theme_cache.font_size), glyphs[j].advance * glyphs[j].repeat, MAX(theme_cache.font->get_underline_thickness(theme_cache.font_size) * theme_cache.base_scale, 1));
-										RS::get_singleton()->canvas_item_add_rect(text_ci, rect, gl_color);
+										RS::get_singleton()->canvas_item_add_rect(main_text_ci, rect, gl_color);
 									}
 								}
 							}
 
 							if (draw_tabs && ((glyphs[j].flags & TextServer::GRAPHEME_IS_TAB) == TextServer::GRAPHEME_IS_TAB)) {
 								int yofs = (text_height - theme_cache.tab_icon->get_height()) / 2 - ldata->get_line_ascent(line_wrap_index);
-								theme_cache.tab_icon->draw(text_ci, Point2(char_pos, ofs_y + yofs), gl_color);
+								theme_cache.tab_icon->draw(main_text_ci, Point2(char_pos, ofs_y + yofs), gl_color);
 							} else if (draw_spaces && ((glyphs[j].flags & TextServer::GRAPHEME_IS_SPACE) == TextServer::GRAPHEME_IS_SPACE) && ((glyphs[j].flags & TextServer::GRAPHEME_IS_VIRTUAL) != TextServer::GRAPHEME_IS_VIRTUAL)) {
 								int yofs = (text_height - theme_cache.space_icon->get_height()) / 2 - ldata->get_line_ascent(line_wrap_index);
 								int xofs = (glyphs[j].advance * glyphs[j].repeat - theme_cache.space_icon->get_width()) / 2;
-								theme_cache.space_icon->draw(text_ci, Point2(char_pos + xofs, ofs_y + yofs), gl_color);
+								theme_cache.space_icon->draw(main_text_ci, Point2(char_pos + xofs, ofs_y + yofs), gl_color);
 							}
 						}
 
@@ -1821,10 +1825,10 @@ void TextEdit::_notification(int p_what) {
 						for (int k = 0; k < glyphs[j].repeat; k++) {
 							if (!clipped && (char_ofs + char_margin + glyphs[j].advance) >= xmargin_beg && (char_ofs + char_margin) <= xmargin_end) {
 								if (glyphs[j].font_rid != RID()) {
-									TS->font_draw_glyph(glyphs[j].font_rid, content_ci, glyphs[j].font_size, Vector2(char_margin + char_ofs + glyphs[j].x_off, ofs_y + glyphs[j].y_off), glyphs[j].index, gl_color);
+									TS->font_draw_glyph(glyphs[j].font_rid, main_text_ci, glyphs[j].font_size, Vector2(char_margin + char_ofs + glyphs[j].x_off, ofs_y + glyphs[j].y_off), glyphs[j].index, gl_color);
 									had_glyphs_drawn = true;
 								} else if (((glyphs[j].flags & TextServer::GRAPHEME_IS_VIRTUAL) != TextServer::GRAPHEME_IS_VIRTUAL) && ((glyphs[j].flags & TextServer::GRAPHEME_IS_EMBEDDED_OBJECT) != TextServer::GRAPHEME_IS_EMBEDDED_OBJECT)) {
-									TS->draw_hex_code_box(content_ci, glyphs[j].font_size, Vector2(char_margin + char_ofs + glyphs[j].x_off, ofs_y + glyphs[j].y_off), glyphs[j].index, gl_color);
+									TS->draw_hex_code_box(main_text_ci, glyphs[j].font_size, Vector2(char_margin + char_ofs + glyphs[j].x_off, ofs_y + glyphs[j].y_off), glyphs[j].index, gl_color);
 									had_glyphs_drawn = true;
 								}
 							}
@@ -1919,7 +1923,7 @@ void TextEdit::_notification(int p_what) {
 							colors.append(u.color);
 							// theme_cache.base_scale is not necessary here, as font size is already dependent on editor scale.
 							// See https://github.com/godotengine/godot/pull/119588#pullrequestreview-4618459305 for more info.
-							RS::get_singleton()->canvas_item_add_polyline(text_ci, points, colors, MAX(theme_cache.font->get_underline_thickness(theme_cache.font_size), 1), true);
+							RS::get_singleton()->canvas_item_add_polyline(main_text_ci, points, colors, MAX(theme_cache.font->get_underline_thickness(theme_cache.font_size), 1), true);
 						}
 					}
 
@@ -1933,7 +1937,7 @@ void TextEdit::_notification(int p_what) {
 							int yofs = (text_height - _get_folded_eol_icon()->get_height()) / 2 - ldata->get_line_ascent(line_wrap_index);
 							Color eol_color = _get_code_folding_color();
 							eol_color.a = 1;
-							_get_folded_eol_icon()->draw(text_ci, Point2(xofs, ofs_y + yofs), eol_color);
+							_get_folded_eol_icon()->draw(main_text_ci, Point2(xofs, ofs_y + yofs), eol_color);
 						}
 					}
 
@@ -2078,7 +2082,7 @@ void TextEdit::_notification(int p_what) {
 											rect.size.x = xmargin_end - rect.position.x;
 										}
 										rect.size.y = caret_width;
-										RS::get_singleton()->canvas_item_add_rect(text_ci, rect, theme_cache.caret_color);
+										RS::get_singleton()->canvas_item_add_rect(main_text_ci, rect, theme_cache.caret_color);
 										carets[c].draw_pos.x = rect.position.x;
 									}
 								}
@@ -2097,7 +2101,7 @@ void TextEdit::_notification(int p_what) {
 											rect.size.x = xmargin_end - rect.position.x;
 										}
 										rect.size.y = caret_width * 3;
-										RS::get_singleton()->canvas_item_add_rect(text_ci, rect, theme_cache.caret_color);
+										RS::get_singleton()->canvas_item_add_rect(main_text_ci, rect, theme_cache.caret_color);
 										carets[c].draw_pos.x = rect.position.x;
 									}
 								}
@@ -2483,10 +2487,18 @@ Rect2 TextEdit::_get_content_rect() const {
 	const real_t height = control_size.y - sb->get_margin(SIDE_TOP) - sb->get_margin(SIDE_BOTTOM);
 	const Rect2 content_rect = Rect2(sb->get_offset(), Size2(width, height));
 
-	const real_t v_size = MAX(v_scroll->is_visible() ? v_scroll->get_bound_minimum_size().x : 0, draw_minimap ? minimap_width : 0);
-	const real_t h_size = h_scroll->is_visible() ? h_scroll->get_bound_minimum_size().y : 0;
+	return content_rect;
+}
 
-	return content_rect.grow_individual(0, 0, -v_size, -h_size);
+Rect2 TextEdit::_get_main_text_rect() const {
+	Rect2 main_text_rect = _get_content_rect();
+	main_text_rect.position.x += gutters_width + gutter_padding;
+	main_text_rect.size.width -= gutters_width + gutter_padding;
+	if (draw_minimap) {
+		main_text_rect.size.width -= minimap_width;
+	}
+
+	return main_text_rect;
 }
 
 void TextEdit::gui_input(const Ref<InputEvent> &p_gui_input) {
@@ -9460,9 +9472,11 @@ void TextEdit::_update_scrollbars() {
 
 	int visible_width = size.width - style->get_minimum_size().width;
 	int total_width = (draw_placeholder ? placeholder_max_width : text.get_max_width()) + gutters_width + gutter_padding;
-
 	if (draw_minimap) {
 		total_width += minimap_width;
+	}
+	if (h_scroll->is_visible()) {
+		total_width += h_scroll->get_bound_minimum_size().width;
 	}
 
 	content_size_cache = Vector2i(total_width + 10, MAX(total_rows, 1) * get_line_height());
@@ -10144,6 +10158,10 @@ TextEdit::TextEdit(const String &p_placeholder) {
 	content_ci = RS::get_singleton()->canvas_item_create();
 	RS::get_singleton()->canvas_item_set_parent(content_ci, get_canvas_item());
 	RS::get_singleton()->canvas_item_set_use_parent_material(content_ci, true);
+
+	main_text_ci = RS::get_singleton()->canvas_item_create();
+	RS::get_singleton()->canvas_item_set_parent(main_text_ci, get_canvas_item());
+	RS::get_singleton()->canvas_item_set_use_parent_material(main_text_ci, true);
 
 	h_scroll = memnew(HScrollBar);
 	v_scroll = memnew(VScrollBar);
