@@ -288,6 +288,9 @@ private:
 	/* Text */
 	Text text;
 	RID text_ci;
+	RID content_ci;
+	RID main_text_ci;
+	RID hint_ci;
 	bool setting_text = false;
 
 	enum AltInputMode {
@@ -872,6 +875,9 @@ public:
 	/* Text */
 	// Text properties.
 	RID get_text_canvas_item() const;
+	RID get_content_canvas_item() const;
+	RID get_hint_canvas_item() const;
+	RID get_main_text_canvas_item() const;
 
 	bool has_ime_text() const;
 	void cancel_ime();
@@ -1273,6 +1279,9 @@ public:
 	bool is_custom_word_separators_enabled() const;
 
 	String get_custom_word_separators() const;
+
+	Rect2 _get_content_rect() const;
+	Rect2 _get_main_text_rect() const;
 
 	/* Deprecated. */
 #ifndef DISABLE_DEPRECATED
