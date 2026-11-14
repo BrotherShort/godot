@@ -875,6 +875,8 @@ public:
 	/* Text */
 	// Text properties.
 	RID get_text_canvas_item() const;
+	RID get_content_canvas_item() const;
+	RID get_main_text_canvas_item() const;
 
 	bool has_ime_text() const;
 	void cancel_ime();

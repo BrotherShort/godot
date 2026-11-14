@@ -7231,6 +7231,14 @@ RID TextEdit::get_text_canvas_item() const {
 	return text_ci;
 }
 
+RID TextEdit::get_content_canvas_item() const {
+	return content_ci;
+}
+
+RID TextEdit::get_main_text_canvas_item() const {
+	return main_text_ci;
+}
+
 VScrollBar *TextEdit::get_v_scroll_bar() const {
 	return v_scroll;
 }
@@ -10176,17 +10184,17 @@ TextEdit::TextEdit(const String &p_placeholder) {
 
 	text.set_tab_size(text.get_tab_size());
 
-	text_ci = RS::get_singleton()->canvas_item_create();
-	RS::get_singleton()->canvas_item_set_parent(text_ci, get_canvas_item());
-	RS::get_singleton()->canvas_item_set_use_parent_material(text_ci, true);
+	main_text_ci = RS::get_singleton()->canvas_item_create();
+	RS::get_singleton()->canvas_item_set_parent(main_text_ci, get_canvas_item());
+	RS::get_singleton()->canvas_item_set_use_parent_material(main_text_ci, true);
 
 	content_ci = RS::get_singleton()->canvas_item_create();
 	RS::get_singleton()->canvas_item_set_parent(content_ci, get_canvas_item());
 	RS::get_singleton()->canvas_item_set_use_parent_material(content_ci, true);
 
-	main_text_ci = RS::get_singleton()->canvas_item_create();
-	RS::get_singleton()->canvas_item_set_parent(main_text_ci, get_canvas_item());
-	RS::get_singleton()->canvas_item_set_use_parent_material(main_text_ci, true);
+	text_ci = RS::get_singleton()->canvas_item_create();
+	RS::get_singleton()->canvas_item_set_parent(text_ci, get_canvas_item());
+	RS::get_singleton()->canvas_item_set_use_parent_material(text_ci, true);
 
 	h_scroll = memnew(HScrollBar);
 	v_scroll = memnew(VScrollBar);
